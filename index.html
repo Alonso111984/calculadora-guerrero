@@ -14,8 +14,6 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-      overflow: hidden;
-      touch-action: none;
     }
 
     .font-mono-code {
@@ -42,7 +40,7 @@
     }
   </style>
 </head>
-<body id="appBody" class="h-[100dvh] w-full flex flex-col items-center justify-center p-1 sm:p-5 transition-colors duration-500 overflow-hidden bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950 text-slate-100">
+<body id="appBody" class="min-h-[100dvh] w-full flex flex-col items-center justify-center p-1 sm:p-5 transition-colors duration-500 overflow-auto bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950 text-slate-100">
 
   <!-- Halo ambiental difuminado con los colores de la fotografía -->
   <div id="ambientBg" class="fixed inset-0 pointer-events-none opacity-25 blur-3xl transition-all duration-700 bg-cover bg-center"></div>
@@ -51,13 +49,13 @@
   <input id="photoInput" type="file" accept="image/*" class="hidden" />
 
   <!-- Contenedor Principal Floating Frame UI -->
-  <main id="calcShell" class="relative z-10 w-full max-w-[430px] max-h-[98dvh] flex flex-col rounded-[2.2rem] p-3 sm:p-5 transition-all duration-300 border bg-slate-900/85 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl">
+  <main id="calcShell" class="relative z-10 w-full max-w-[430px] my-auto flex flex-col rounded-[2.2rem] p-3 sm:p-5 transition-all duration-300 border bg-slate-900/85 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl">
     
     <!-- Barra Superior -->
     <header class="flex items-center justify-between gap-1 mb-3 px-1 text-inherit">
       <div class="flex items-center gap-2">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></div>
-        <span class="text-xs font-semibold tracking-wider uppercase opacity-90">AERO·FRAME PRO</span>
+        <span class="text-xs font-semibold tracking-wider uppercase opacity-90">Lucas Pro</span>
       </div>
 
       <div class="flex items-center gap-1">
@@ -81,12 +79,6 @@
         <button id="btnToggleHistory" type="button" title="Historial de operaciones" class="p-2 rounded-xl transition-all relative hover:bg-black/10 opacity-70 hover:opacity-100">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
           <span id="historyDot" class="hidden absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-        </button>
-
-        <!-- Modo Claro/Oscuro -->
-        <button id="btnToggleTheme" type="button" title="Cambiar entre modo claro y oscuro" class="p-2 rounded-xl transition-all hover:bg-black/10 opacity-90 hover:opacity-100">
-          <svg id="iconSun" class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-          <svg id="iconMoon" class="w-4 h-4 hidden text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
       </div>
     </header>
@@ -372,11 +364,11 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.variant = btn.variant;
-      button.className = `glass-key select-none focus:outline-none ${btn.colSpan === 2 ? 'col-span-2' : ''} ${
-        btn.isSci ? 'h-[2.4rem] sm:h-12 text-xs sm:text-sm' : 'h-[3.25rem] sm:h-16 text-lg sm:text-xl'
+      button.className = `glass-key select-none focus:outline-none flex flex-col justify-center ${btn.colSpan === 2 ? 'col-span-2' : ''} ${
+        btn.isSci ? 'text-xs sm:text-sm min-h-[44px]' : 'text-lg sm:text-xl min-h-[56px]'
       }`;
 
-      // Eliminado el 'blur' para que la foto se vea 100% nítida como marco flotante
+      // Floating Frame UI: Sin desenfoque en el centro
       button.innerHTML = `
         <div class="key-photo-layer absolute inset-0 pointer-events-none bg-no-repeat" style="filter: contrast(1.05) brightness(1.02) saturate(1.05);"></div>
         <div class="key-tint-layer absolute inset-0 pointer-events-none transition-colors duration-150"></div>
@@ -745,29 +737,6 @@
       document.getElementById('btnToggleSound').addEventListener('click', (e) => {
         state.soundAndHaptics = !state.soundAndHaptics;
         e.target.textContent = state.soundAndHaptics ? 'Háptica: ON' : 'Silencio';
-      });
-
-      // Modo Claro / Oscuro
-      document.getElementById('btnToggleTheme').addEventListener('click', () => {
-        state.isDark = !state.isDark;
-        const body = document.getElementById('appBody');
-        const shell = document.getElementById('calcShell');
-        const screen = document.getElementById('displayScreen');
-
-        document.getElementById('iconSun').classList.toggle('hidden', !state.isDark);
-        document.getElementById('iconMoon').classList.toggle('hidden', state.isDark);
-
-        if (state.isDark) {
-          body.className = 'h-[100dvh] w-full flex flex-col items-center justify-center p-1 sm:p-5 transition-colors duration-500 overflow-hidden bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950 text-slate-100';
-          shell.className = 'relative z-10 w-full max-w-[430px] max-h-[98dvh] flex flex-col rounded-[2.2rem] p-3 sm:p-5 transition-all duration-300 border bg-slate-900/85 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl';
-          screen.className = 'relative shrink-0 rounded-3xl p-3 sm:p-4 mb-2 sm:mb-3.5 border transition-all overflow-hidden bg-slate-950/90 border-white/15 shadow-[inset_0_4px_20px_rgba(0,0,0,0.85)]';
-        } else {
-          body.className = 'h-[100dvh] w-full flex flex-col items-center justify-center p-1 sm:p-5 transition-colors duration-500 overflow-hidden bg-gradient-to-br from-slate-200 via-stone-100 to-slate-300 text-slate-800';
-          shell.className = 'relative z-10 w-full max-w-[430px] max-h-[98dvh] flex flex-col rounded-[2.2rem] p-3 sm:p-5 transition-all duration-300 border bg-white/85 border-white/80 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.28),inset_0_2px_4px_rgba(255,255,255,0.9)] backdrop-blur-3xl';
-          screen.className = 'relative shrink-0 rounded-3xl p-3 sm:p-4 mb-2 sm:mb-3.5 border transition-all overflow-hidden bg-white/95 border-white/90 shadow-[inset_0_3px_12px_rgba(15,23,42,0.12)]';
-        }
-        updateDisplayUI();
-        syncOpticalWindows();
       });
 
       // Copiar resultado
