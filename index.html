@@ -59,9 +59,6 @@
   <!-- Halo ambiental difuminado con los colores de la fotografía -->
   <div id="ambientBg" class="fixed inset-0 pointer-events-none opacity-25 blur-3xl transition-all duration-700 bg-cover bg-center"></div>
 
-  <!-- Input oculto para cargar la fotografía personal -->
-  <input id="photoInput" type="file" accept="image/*" class="hidden" />
-
   <!-- Contenedor Principal Floating Frame UI -->
   <main id="calcShell" class="relative z-10 w-full max-w-[430px] my-auto flex flex-col rounded-[2.2rem] p-3 sm:p-5 transition-all duration-300 border bg-slate-900/85 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] backdrop-blur-3xl">
     
@@ -73,12 +70,6 @@
       </div>
 
       <div class="flex items-center gap-1">
-        <!-- Subir Foto -->
-        <button id="btnUploadPhoto" type="button" title="Cargar tu fotografía desde el dispositivo" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Mi Foto</span>
-        </button>
-
         <!-- Ajustes de Cristal -->
         <button id="btnToggleCustom" type="button" title="Ajustar fondo" class="p-2 rounded-xl transition-all hover:bg-black/10 opacity-70 hover:opacity-100">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
@@ -104,14 +95,8 @@
         <span id="opacityLabel" class="font-mono-code font-bold text-emerald-400">Tinte al 15%</span>
       </div>
       <input id="opacitySliderTop" type="range" min="0.0" max="0.60" step="0.01" value="0.15" class="w-full accent-emerald-500 cursor-pointer h-1.5 rounded-lg" />
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <button id="btnChangePhotoPanel" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold hover:bg-emerald-400 transition">
-          Cambiar Fotografía
-        </button>
-        <button id="btnResetPhoto" type="button" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition">
-          Restaurar Retrato 3D
-        </button>
-        <button id="btnToggleSound" type="button" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition ml-auto text-emerald-400 font-semibold">
+      <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
+        <button id="btnToggleSound" type="button" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition text-emerald-400 font-semibold">
           Háptica: ON
         </button>
       </div>
@@ -176,10 +161,10 @@
 
   <script>
     // ====================================================
-    // 1. FOTOGRAFÍA PREDETERMINADA ACTUALIZADA (Imagen subida)
+    // 1. FOTOGRAFÍA PREDETERMINADA FIJA
     // ====================================================
-    // Usaremos directamente la URL temporal de la imagen que adjuntaste para que aparezca completa en todo el teclado
-    const initialUserPhoto = "WhatsApp Image 2026-11-01 at 10.26.58 (1)_2.jpeg";
+    // Usaremos directamente el archivo Lucas.jpg que subiste a GitHub
+    const initialUserPhoto = "Lucas.jpg";
 
     // ====================================================
     // 2. ESTADO GLOBAL DE LA APLICACIÓN
@@ -194,14 +179,12 @@
       showSciKeys: true,
       glassOpacity: 0.15,
       soundAndHaptics: true,
-      bgImage: "WhatsApp Image 2026-11-01 at 10.26.58 (1)_2.jpeg",
+      bgImage: "Lucas.jpg",
       imgSize: { width: 600, height: 750 },
       history: []
     };
 
     try {
-      const savedPhoto = localStorage.getItem('calc_pro_custom_photo_v4');
-      if (savedPhoto) state.bgImage = savedPhoto;
       const savedHist = localStorage.getItem('calc_pro_history');
       if (savedHist) state.history = JSON.parse(savedHist);
     } catch (e) {}
@@ -693,34 +676,6 @@
       }
       sTop.addEventListener('input', (e) => onOpacityChange(e.target.value));
       sBot.addEventListener('input', (e) => onOpacityChange(e.target.value));
-
-      const photoInput = document.getElementById('photoInput');
-      document.getElementById('btnUploadPhoto').addEventListener('click', () => photoInput.click());
-      document.getElementById('btnChangePhotoPanel').addEventListener('click', () => photoInput.click());
-
-      photoInput.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (typeof ev.target.result === 'string') {
-            state.bgImage = ev.target.result;
-            try {
-              localStorage.setItem('calc_pro_custom_photo_v4', state.bgImage);
-            } catch (err) {}
-            updateImageDimensions(state.bgImage);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-
-      document.getElementById('btnResetPhoto').addEventListener('click', () => {
-        state.bgImage = initialUserPhoto;
-        try {
-          localStorage.removeItem('calc_pro_custom_photo_v4');
-        } catch (err) {}
-        updateImageDimensions(state.bgImage);
-      });
 
       // Alternar paneles
       document.getElementById('btnToggleCustom').addEventListener('click', () => {
