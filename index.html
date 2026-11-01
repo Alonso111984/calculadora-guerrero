@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AERO·GLASS PRO — Calculadora Científica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Animación suave de las teclas de cristal 3D */
+    .glass-key {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s ease;
+    }
+    .glass-key:active, .glass-key.key-pressed {
+      transform: translateY(3px) scale(0.965);
+    }
+  </style>
+</head>
+<body id="appBody" class="min-h-screen w-full flex flex-col items-center justify-center p-2 sm:p-5 transition-colors duration-500 overflow-x-hidden bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950 text-slate-100">
+
+  <!-- Halo ambiental difuminado con los colores de la fotografía -->
+  <div id="ambientBg" class="fixed inset-0 pointer-events-none opacity-25 blur-3xl transition-all duration-700 bg-cover bg-center"></div>
+
+  <!-- Input oculto para cargar la fotografía personal -->
+  <input id="photoInput" type="file" accept="image/*" class="hidden" />
+
+  <!-- Contenedor Principal Glassmorphism + Soft 3D -->
+  <main id="calcShell" class="relative z-10 w-full max-w-[430px] rounded-[2.2rem] p-3.5 sm:p-5 transition-all duration-300 border bg-slate-900/65 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.85),inset_0_1px_2px_rgba(255,255,255,0.2)] backdrop-blur-2xl">
+    
+    <!-- Barra Superior -->
+    <header class="flex items-center justify-between gap-1 mb-3 px-1">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></div>
+        <span class="text-xs font-semibold tracking-wider uppercase opacity-80">AERO·GLASS PRO</span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <!-- Subir Foto -->
+        <button id="btnUploadPhoto" type="button" title="Cargar tu fotografía desde el dispositivo" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Mi Foto</span>
+        </button>
+
+        <!-- Ajustes de Cristal -->
+        <button id="btnToggleCustom" type="button" title="Ajustar transparencia de las teclas" class="p-2 rounded-xl transition-all hover:bg-white/10 text-slate-300">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
+        </button>
+
+        <!-- Mostrar/Ocultar Científicas -->
+        <button id="btnToggleSci" type="button" title="Mostrar u ocultar funciones científicas" class="p-2 rounded-xl transition-all bg-white/15 text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+
+        <!-- Historial -->
+        <button id="btnToggleHistory" type="button" title="Historial de operaciones" class="p-2 rounded-xl transition-all relative hover:bg-white/10 text-slate-300">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          <span id="historyDot" class="hidden absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        </button>
+
+        <!-- Modo Claro/Oscuro -->
+        <button id="btnToggleTheme" type="button" title="Cambiar entre modo claro y oscuro" class="p-2 rounded-xl transition-all hover:bg-white/10 text-amber-300">
+          <svg id="iconSun" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg id="iconMoon" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Panel Desplegable: Personalización de Cristal -->
+    <div id="customizerPanel" class="hidden mb-3 p-3.5 rounded-2xl border transition-all text-xs space-y-3 bg-slate-950/80 border-white/15 text-slate-200">
+      <div class="flex items-center justify-between">
+        <span class="font-semibold">Visibilidad de la Fotografía en Teclas</span>
+        <span id="opacityLabel" class="font-mono-code font-bold text-emerald-400">72% visible</span>
+      </div>
+      <input id="opacitySliderTop" type="range" min="0.05" max="0.80" step="0.01" value="0.28" class="w-full accent-emerald-500 cursor-pointer h-1.5 rounded-lg" />
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <button id="btnChangePhotoPanel" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold hover:bg-emerald-400 transition">
+          Cambiar Fotografía
+        </button>
+        <button id="btnResetPhoto" type="button" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition">
+          Restaurar Retrato 3D
+        </button>
+        <button id="btnToggleSound" type="button" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition ml-auto text-emerald-400 font-semibold">
+          Háptica: ON
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel Desplegable: Historial -->
+    <div id="historyPanel" class="hidden mb-3 p-3.5 rounded-2xl border max-h-52 overflow-y-auto transition-all bg-slate-950/85 border-white/15 text-slate-200">
+      <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-white/10">
+        <span class="text-xs font-semibold uppercase tracking-wider opacity-75">Historial Reciente</span>
+        <button id="btnClearHistory" type="button" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">Limpiar</button>
+      </div>
+      <div id="historyList" class="space-y-1.5 text-xs"></div>
+    </div>
+
+    <!-- Pantalla Digital de Resultados -->
+    <section id="displayScreen" class="relative rounded-3xl p-4 mb-3.5 border transition-all overflow-hidden bg-slate-950/75 border-white/15 shadow-[inset_0_4px_20px_rgba(0,0,0,0.75)]">
+      <div class="flex items-center justify-between text-[11px] font-semibold tracking-wider mb-1.5">
+        <div class="flex items-center gap-1.5">
+          <span id="badgeAngle" class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-400/30">DEG</span>
+          <span id="badgeInv" class="hidden px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">INV</span>
+          <span id="badgeSci" class="hidden px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-400/30">SCI</span>
+        </div>
+
+        <button id="btnCopy" type="button" class="flex items-center gap-1 px-2 py-0.5 rounded-lg transition hover:bg-white/10 text-slate-400">
+          <span id="copyText">Copiar</span>
+        </button>
+      </div>
+
+      <!-- Expresión actual -->
+      <div id="exprDisplay" class="min-h-[28px] w-full text-right font-mono-code text-sm sm:text-base opacity-80 break-all leading-snug">
+        <span class="opacity-40">0</span>
+      </div>
+
+      <!-- Resultado en tiempo real -->
+      <div class="mt-1 flex items-baseline justify-end gap-2 min-h-[44px] overflow-x-auto no-scrollbar">
+        <span id="equalSignPreview" class="hidden text-xs font-mono-code opacity-50">=</span>
+        <div id="resultDisplay" class="font-mono-code font-extrabold tracking-tight text-right transition-all text-3xl sm:text-4xl text-white">0</div>
+      </div>
+    </section>
+
+    <!-- Teclado con Ventanas de Cristal Sincronizadas -->
+    <section id="keypadContainer" class="relative rounded-3xl p-2 sm:p-2.5 overflow-hidden border transition-all border-white/15 shadow-[inset_0_2px_12px_rgba(0,0,0,0.65)]">
+      <!-- Resplandor sutil entre ranuras -->
+      <div id="keypadAmbient" class="absolute inset-0 pointer-events-none transition-opacity duration-300 bg-cover bg-center opacity-20 blur-md brightness-75"></div>
+
+      <!-- Cuadrícula Científica (5 columnas) -->
+      <div id="sciGrid" class="relative z-10 grid grid-cols-5 gap-1.5 sm:gap-2 mb-2"></div>
+
+      <!-- Cuadrícula Principal (4 columnas) -->
+      <div id="mainGrid" class="relative z-10 grid grid-cols-4 gap-2 sm:gap-2.5"></div>
+    </section>
+
+    <!-- Control Rápido Inferior de Cristal -->
+    <footer class="mt-3 px-2 flex items-center justify-between text-[11px] opacity-80">
+      <div class="flex items-center gap-2 w-full">
+        <span class="text-amber-400 font-bold">✦</span>
+        <span class="shrink-0 font-medium">Cristal:</span>
+        <input id="opacitySliderBottom" type="range" min="0.05" max="0.75" step="0.01" value="0.28" title="Ajustar transparencia de las teclas" class="w-full accent-emerald-400 cursor-pointer h-1 rounded-lg" />
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // ====================================================
+    // 1. RETRATO 3D INTEGRADO POR DEFECTO (Basado en tu imagen)
+    // ====================================================
+    function createDefaultAvatarImage() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1150" width="800" height="1150">
+        <defs>
+          <radialGradient id="bgBlue" cx="50%" cy="38%" r="70%">
+            <stop offset="0%" stop-color="#388bfd"/>
+            <stop offset="55%" stop-color="#1d6be6"/>
+            <stop offset="100%" stop-color="#0b46b5"/>
+          </radialGradient>
+          <radialGradient id="skinGrad" cx="48%" cy="38%" r="58%">
+            <stop offset="0%" stop-color="#ffcca7"/>
+            <stop offset="60%" stop-color="#f2aa7e"/>
+            <stop offset="100%" stop-color="#d48359"/>
+          </radialGradient>
+          <linearGradient id="neckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#e5986e"/>
+            <stop offset="50%" stop-color="#f0a880"/>
+            <stop offset="100%" stop-color="#c4744a"/>
+          </linearGradient>
+          <radialGradient id="irisBlue" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#0a2e63"/>
+            <stop offset="38%" stop-color="#1975d2"/>
+            <stop offset="78%" stop-color="#3fa0ff"/>
+            <stop offset="100%" stop-color="#082859"/>
+          </radialGradient>
+          <linearGradient id="shirtGrad" x1="20%" y1="0%" x2="85%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="55%" stop-color="#f1f5f9"/>
+            <stop offset="100%" stop-color="#cbd5e1"/>
+          </linearGradient>
+          <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3b2618"/>
+            <stop offset="50%" stop-color="#22150d"/>
+            <stop offset="100%" stop-color="#120b07"/>
+          </linearGradient>
+          <linearGradient id="hairHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#5c3b24"/>
+            <stop offset="100%" stop-color="#2b1b11"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="1150" fill="url(#bgBlue)"/>
+        <path d="M 105,860 Q 75,1020 55,1150 L 210,1150 L 230,900 Z" fill="url(#skinGrad)"/>
+        <path d="M 695,860 Q 725,1020 745,1150 L 590,1150 L 570,900 Z" fill="url(#skinGrad)"/>
+        <path d="M 275,650 C 175,680 110,745 85,895 L 215,935 L 215,1150 L 585,1150 L 585,935 L 715,895 C 690,745 625,680 525,650 Z" fill="url(#shirtGrad)"/>
+        <path d="M 315,545 L 300,670 Q 400,745 500,670 L 485,545 Z" fill="url(#neckGrad)"/>
+        <path d="M 312,565 Q 400,645 488,565 L 485,545 L 315,545 Z" fill="#8f4b29" opacity="0.45"/>
+        <path d="M 272,648 Q 400,775 528,648 Q 505,632 492,638 Q 400,735 308,638 Q 295,632 272,648 Z" fill="#f8fafc" stroke="#dce4ee" stroke-width="3"/>
+        <ellipse cx="222" cy="435" rx="34" ry="52" transform="rotate(-10 222 435)" fill="url(#skinGrad)"/>
+        <ellipse cx="224" cy="437" rx="18" ry="30" transform="rotate(-10 224 437)" fill="#c96f46" opacity="0.65"/>
+        <ellipse cx="578" cy="435" rx="34" ry="52" transform="rotate(10 578 435)" fill="url(#skinGrad)"/>
+        <ellipse cx="576" cy="437" rx="18" ry="30" transform="rotate(10 576 437)" fill="#c96f46" opacity="0.65"/>
+        <path d="M 235,310 C 235,205 565,205 565,310 C 565,455 535,605 400,612 C 265,605 235,455 235,310 Z" fill="url(#skinGrad)"/>
+        <ellipse cx="295" cy="455" rx="45" ry="28" fill="#e87a5d" opacity="0.28"/>
+        <ellipse cx="505" cy="455" rx="45" ry="28" fill="#e87a5d" opacity="0.28"/>
+        <ellipse cx="332" cy="402" rx="54" ry="50" fill="#ffffff"/>
+        <circle cx="338" cy="402" r="35" fill="url(#irisBlue)"/>
+        <circle cx="338" cy="402" r="19" fill="#050b14"/>
+        <circle cx="352" cy="384" r="10.5" fill="#ffffff"/>
+        <circle cx="322" cy="418" r="5" fill="#ffffff" opacity="0.85"/>
+        <ellipse cx="468" cy="402" rx="54" ry="50" fill="#ffffff"/>
+        <circle cx="462" cy="402" r="35" fill="url(#irisBlue)"/>
+        <circle cx="462" cy="402" r="19" fill="#050b14"/>
+        <circle cx="476" cy="384" r="10.5" fill="#ffffff"/>
+        <circle cx="446" cy="418" r="5" fill="#ffffff" opacity="0.85"/>
+        <path d="M 272,338 Q 330,305 376,334 Q 330,322 276,348 Z" fill="#23150d"/>
+        <path d="M 424,334 Q 470,305 528,338 Q 470,322 424,348 Z" fill="#23150d"/>
+        <path d="M 244,415 C 248,470 272,495 305,495 C 325,495 350,475 400,475 C 450,475 475,495 495,495 C 528,495 552,470 556,415 C 562,505 520,612 400,618 C 280,612 238,505 244,415 Z" fill="url(#hairGrad)"/>
+        <path d="M 310,492 Q 400,536 490,492 Q 455,546 400,546 Q 345,546 310,492 Z" fill="#f0a27a"/>
+        <path d="M 300,488 Q 350,455 400,472 Q 450,455 500,488 Q 485,506 455,498 Q 400,484 345,498 Q 315,506 300,488 Z" fill="#1e130c"/>
+        <path d="M 322,494 Q 400,524 478,494" fill="none" stroke="#8c3f27" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M 378,522 Q 400,518 422,522 L 408,558 Q 400,564 392,558 Z" fill="#1e130c"/>
+        <ellipse cx="400" cy="442" rx="34" ry="25" fill="url(#skinGrad)"/>
+        <ellipse cx="394" cy="435" rx="14" ry="8" fill="#ffe1c9" opacity="0.6"/>
+        <path d="M 218,385 L 250,392" stroke="#1e293b" stroke-width="11" stroke-linecap="round"/>
+        <path d="M 582,385 L 550,392" stroke="#1e293b" stroke-width="11" stroke-linecap="round"/>
+        <path d="M 384,395 Q 400,383 416,395" fill="none" stroke="#14181f" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="322" cy="404" r="64" fill="none" stroke="#14181f" stroke-width="10"/>
+        <circle cx="478" cy="404" r="64" fill="none" stroke="#14181f" stroke-width="10"/>
+        <path d="M 278,365 Q 305,350 342,355" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+        <path d="M 434,365 Q 461,350 498,355" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+        <path d="M 232,395 C 200,320 205,215 268,165 C 255,145 280,125 310,132 C 335,95 405,82 448,112 C 485,88 532,108 535,142 C 578,145 602,188 582,228 C 618,265 602,340 568,395 C 562,335 545,285 505,265 C 445,305 335,315 275,285 C 250,315 240,355 232,395 Z" fill="url(#hairGrad)"/>
+        <path d="M 255,265 Q 335,325 455,275 Q 385,235 285,225 Z" fill="url(#hairHighlight)"/>
+        <path d="M 310,132 Q 375,90 465,135 Q 405,155 325,165 Z" fill="url(#hairHighlight)"/>
+      </svg>`;
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+
+    // ====================================================
+    // 2. ESTADO GLOBAL DE LA APLICACIÓN
+    // ====================================================
+    const state = {
+      expression: '',
+      lastAnswer: '0',
+      angleMode: 'DEG',
+      isInverse: false,
+      forceSci: false,
+      isDark: true,
+      showSciKeys: true,
+      glassOpacity: 0.28,
+      soundAndHaptics: true,
+      bgImage: createDefaultAvatarImage(),
+      imgSize: { width: 800, height: 1150 },
+      history: []
+    };
+
+    try {
+      const savedPhoto = localStorage.getItem('calc_pro_custom_photo_v2');
+      if (savedPhoto) state.bgImage = savedPhoto;
+      const savedHist = localStorage.getItem('calc_pro_history');
+      if (savedHist) state.history = JSON.parse(savedHist);
+    } catch (e) {}
+
+    // ====================================================
+    // 3. MOTOR MATEMÁTICO SEGURO
+    // ====================================================
+    function factorial(n) {
+      if (n < 0 || Math.abs(n - Math.round(n)) > 1e-9) return NaN;
+      const intN = Math.round(n);
+      if (intN > 170) return Infinity;
+      if (intN === 0 || intN === 1) return 1;
+      let res = 1;
+      for (let i = 2; i <= intN; i++) res *= i;
+      return res;
+    }
+
+    function evaluateMathExpression(rawExpr, angleMode) {
+      if (!rawExpr || !rawExpr.trim()) return '';
+      try {
+        let expr = rawExpr.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+        const openP = (expr.match(/\(/g) || []).length;
+        const closeP = (expr.match(/\)/g) || []).length;
+        if (openP > closeP) expr += ')'.repeat(openP - closeP);
+
+        expr = expr
+          .replace(/(\d|\))(?=(π|e|sin|cos|tan|asin|acos|atan|log|ln|√))/g, '$1*')
+          .replace(/(π|e|\))(?=(\d|\(|π|e|sin|cos|tan|asin|acos|atan|log|ln|√))/g, '$1*');
+
+        const scope = {
+          PI: Math.PI,
+          E: Math.E,
+          sin: (x) => {
+            const rad = angleMode === 'DEG' ? (x * Math.PI) / 180 : x;
+            const v = Math.sin(rad);
+            return Math.abs(v) < 1e-15 ? 0 : v;
+          },
+          cos: (x) => {
+            const rad = angleMode === 'DEG' ? (x * Math.PI) / 180 : x;
+            const v = Math.cos(rad);
+            return Math.abs(v) < 1e-15 ? 0 : v;
+          },
+          tan: (x) => {
+            if (angleMode === 'DEG' && Math.abs(x % 180) === 90) return NaN;
+            const rad = angleMode === 'DEG' ? (x * Math.PI) / 180 : x;
+            const v = Math.tan(rad);
+            return Math.abs(v) < 1e-15 ? 0 : v;
+          },
+          asin: (x) => (x < -1 || x > 1 ? NaN : angleMode === 'DEG' ? (Math.asin(x) * 180) / Math.PI : Math.asin(x)),
+          acos: (x) => (x < -1 || x > 1 ? NaN : angleMode === 'DEG' ? (Math.acos(x) * 180) / Math.PI : Math.acos(x)),
+          atan: (x) => (angleMode === 'DEG' ? (Math.atan(x) * 180) / Math.PI : Math.atan(x)),
+          log: (x) => (x <= 0 ? NaN : Math.log10(x)),
+          ln: (x) => (x <= 0 ? NaN : Math.log(x)),
+          sqrt: (x) => (x < 0 ? NaN : Math.sqrt(x)),
+          nroot: (n, x) => {
+            if (n === 0) return NaN;
+            if (x < 0 && n % 2 === 1) return -Math.pow(-x, 1 / n);
+            return x < 0 ? NaN : Math.pow(x, 1 / n);
+          },
+          fact: (x) => factorial(x)
+        };
+
+        expr = expr.replace(/(\d+(?:\.\d+)?)ⁿ√\(([^)]+)\)/g, 'scope.nroot($1,$2)');
+        expr = expr.replace(/(\d+(?:\.\d+)?)ⁿ√(\d+(?:\.\d+)?)/g, 'scope.nroot($1,$2)');
+        expr = expr.replace(/√\(([^)]+)\)/g, 'scope.sqrt($1)');
+        expr = expr.replace(/√(\d+(?:\.\d+)?|π|e)/g, 'scope.sqrt($1)');
+
+        let prev;
+        do {
+          prev = expr;
+          expr = expr.replace(/(\([^()]+\)|\d+(?:\.\d+)?)!/g, 'scope.fact($1)');
+        } while (expr !== prev);
+
+        expr = expr.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+        expr = expr
+          .replace(/asin\(/g, 'scope.asin(')
+          .replace(/acos\(/g, 'scope.acos(')
+          .replace(/atan\(/g, 'scope.atan(')
+          .replace(/sin\(/g, 'scope.sin(')
+          .replace(/cos\(/g, 'scope.cos(')
+          .replace(/tan\(/g, 'scope.tan(')
+          .replace(/log\(/g, 'scope.log(')
+          .replace(/ln\(/g, 'scope.ln(')
+          .replace(/π/g, 'scope.PI')
+          .replace(/(?<![a-zA-Z0-9_])e(?![a-zA-Z0-9_])/g, 'scope.E')
+          .replace(/\^/g, '**');
+
+        const sanitized = expr.replace(/scope\.(PI|E|sin|cos|tan|asin|acos|atan|log|ln|sqrt|nroot|fact)/g, '');
+        if (/[^0-9+\-*/().,E\s]/.test(sanitized)) return 'Error';
+
+        const fn = new Function('scope', `"use strict"; return (${expr});`);
+        const res = fn(scope);
+        if (typeof res !== 'number' || Number.isNaN(res)) return 'Error Matemático';
+        if (!Number.isFinite(res)) return 'Infinito';
+        const rounded = Number(Math.round(Number(res + 'e12')) + 'e-12');
+        return isNaN(rounded) ? res : rounded;
+      } catch (e) {
+        return 'Error';
+      }
+    }
+
+    function formatNumberDisplay(val, forceSci) {
+      if (val === '' || val === null || val === undefined) return '';
+      if (typeof val === 'string') return val;
+      if (forceSci || (Math.abs(val) >= 1e10 && Math.abs(val) !== Infinity) || (Math.abs(val) > 0 && Math.abs(val) < 1e-6)) {
+        return val.toExponential(6).replace(/\.?0+e/, 'e');
+      }
+      const parts = val.toString().split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return parts.join('.');
+    }
+
+    // ====================================================
+    // 4. RETROALIMENTACIÓN HÁPTICA Y SONORA
+    // ====================================================
+    function triggerFeedback(freq = 540) {
+      if (!state.soundAndHaptics) return;
+      if (navigator.vibrate) navigator.vibrate(10);
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.025, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.045);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.045);
+        }
+      } catch (e) {}
+    }
+
+    // ====================================================
+    // 5. CONSTRUCCIÓN DE TECLAS Y VENTANAS DE CRISTAL
+    // ====================================================
+    function getSciKeys() {
+      return [
+        { label: state.angleMode, action: 'DEG_RAD', isSci: true, variant: 'sci' },
+        { label: state.isInverse ? '2nd ●' : '2nd', action: 'INV', isSci: true, variant: state.isInverse ? 'accent' : 'sci' },
+        { label: state.isInverse ? 'sin⁻¹' : 'sin', action: 'SIN', isSci: true, variant: 'sci' },
+        { label: state.isInverse ? 'cos⁻¹' : 'cos', action: 'COS', isSci: true, variant: 'sci' },
+        { label: state.isInverse ? 'tan⁻¹' : 'tan', action: 'TAN', isSci: true, variant: 'sci' },
+        { label: 'x²', action: 'POW2', isSci: true, variant: 'sci' },
+        { label: 'xʸ', action: 'POWY', isSci: true, variant: 'sci' },
+        { label: '√', action: 'SQRT', isSci: true, variant: 'sci' },
+        { label: 'ⁿ√', action: 'NROOT', isSci: true, variant: 'sci' },
+        { label: 'log', action: 'LOG', isSci: true, variant: 'sci' },
+        { label: 'ln', action: 'LN', isSci: true, variant: 'sci' },
+        { label: '(', action: '(', isSci: true, variant: 'sci' },
+        { label: ')', action: ')', isSci: true, variant: 'sci' },
+        { label: 'n!', action: 'FACT', isSci: true, variant: 'sci' },
+        { label: '±', action: 'SIGN', isSci: true, variant: 'sci' },
+        { label: 'π', action: 'π', isSci: true, variant: 'sci' },
+        { label: 'e', action: 'e', isSci: true, variant: 'sci' },
+        { label: '%', action: '%', isSci: true, variant: 'sci' },
+        { label: 'EXP', action: 'EXP10', isSci: true, variant: 'sci' },
+        { label: state.forceSci ? 'SCI ●' : 'SCI', action: 'FE', isSci: true, variant: state.forceSci ? 'accent' : 'sci' }
+      ];
+    }
+
+    const mainKeys = [
+      { label: 'AC', action: 'AC', variant: 'danger' },
+      { label: '⌫', action: 'DEL', variant: 'sci' },
+      { label: '(', action: '(', variant: 'sci' },
+      { label: '÷', action: '÷', variant: 'operator' },
+      { label: '7', action: '7', variant: 'num' },
+      { label: '8', action: '8', variant: 'num' },
+      { label: '9', action: '9', variant: 'num' },
+      { label: '×', action: '×', variant: 'operator' },
+      { label: '4', action: '4', variant: 'num' },
+      { label: '5', action: '5', variant: 'num' },
+      { label: '6', action: '6', variant: 'num' },
+      { label: '−', action: '−', variant: 'operator' },
+      { label: '1', action: '1', variant: 'num' },
+      { label: '2', action: '2', variant: 'num' },
+      { label: '3', action: '3', variant: 'num' },
+      { label: '+', action: '+', variant: 'operator' },
+      { label: '0', action: '0', variant: 'num' },
+      { label: '.', action: '.', variant: 'num' },
+      { label: '=', action: '=', variant: 'accent', colSpan: 2 }
+    ];
+
+    function getTintStyle(variant) {
+      const a = state.glassOpacity;
+      const d = state.isDark;
+      if (variant === 'accent') return d ? `rgba(16, 185, 129, ${Math.min(0.85, a + 0.15)})` : `rgba(5, 150, 105, ${Math.min(0.85, a + 0.15)})`;
+      if (variant === 'danger') return d ? `rgba(225, 29, 72, ${Math.min(0.8, a + 0.1)})` : `rgba(244, 63, 94, ${Math.min(0.8, a + 0.1)})`;
+      if (variant === 'operator') return d ? `rgba(234, 179, 8, ${Math.min(0.75, a + 0.05)})` : `rgba(202, 138, 4, ${Math.min(0.75, a + 0.05)})`;
+      if (variant === 'sci') return d ? `rgba(15, 23, 42, ${Math.min(0.9, a + 0.12)})` : `rgba(241, 245, 249, ${Math.min(0.9, a + 0.12)})`;
+      return d ? `rgba(15, 23, 42, ${a})` : `rgba(255, 255, 255, ${a})`;
+    }
+
+    function createKeyElement(btn) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.variant = btn.variant;
+      button.className = `glass-key select-none focus:outline-none ${btn.colSpan === 2 ? 'col-span-2' : ''} ${
+        btn.isSci ? 'h-11 sm:h-12 text-xs sm:text-sm' : 'h-14 sm:h-16 text-lg sm:text-xl'
+      }`;
+
+      button.innerHTML = `
+        <div class="key-photo-layer absolute inset-0 pointer-events-none bg-no-repeat" style="filter: contrast(1.06) saturate(1.08);"></div>
+        <div class="key-tint-layer absolute inset-0 pointer-events-none transition-colors duration-150" style="backdrop-filter: blur(2.5px); -webkit-backdrop-filter: blur(2.5px);"></div>
+        <div class="key-border-layer absolute inset-0 rounded-2xl pointer-events-none border"></div>
+        <div class="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-white/10"></div>
+        <span class="key-label relative z-10 flex items-center justify-center w-full h-full font-bold tracking-tight">${btn.label}</span>
+      `;
+
+      button.addEventListener('click', () => handleKeyAction(btn));
+      return button;
+    }
+
+    function renderKeypad() {
+      const sciGrid = document.getElementById('sciGrid');
+      const mainGrid = document.getElementById('mainGrid');
+      sciGrid.innerHTML = '';
+      mainGrid.innerHTML = '';
+
+      if (state.showSciKeys) {
+        sciGrid.classList.remove('hidden');
+        getSciKeys().forEach((b) => sciGrid.appendChild(createKeyElement(b)));
+      } else {
+        sciGrid.classList.add('hidden');
+      }
+
+      mainKeys.forEach((b) => mainGrid.appendChild(createKeyElement(b)));
+      requestAnimationFrame(syncOpticalWindows);
+    }
+
+    // Calcula la posición exacta de cada tecla respecto al contenedor completo
+    // para que todas las teclas formen una única fotografía continua sin deformarse
+    function syncOpticalWindows() {
+      const container = document.getElementById('keypadContainer');
+      if (!container) return;
+
+      const W = container.clientWidth || 380;
+      const H = container.clientHeight || 480;
+      const imgRatio = (state.imgSize.width || 800) / (state.imgSize.height || 1150);
+      const boxRatio = W / H;
+
+      let renderW, renderH, offsetX, offsetY;
+      if (boxRatio > imgRatio) {
+        renderW = W;
+        renderH = W / imgRatio;
+        offsetX = 0;
+        offsetY = (H - renderH) / 2;
+      } else {
+        renderH = H;
+        renderW = H * imgRatio;
+        offsetY = 0;
+        offsetX = (W - renderW) / 2;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const keys = container.querySelectorAll('.glass-key');
+
+      keys.forEach((keyEl) => {
+        const keyRect = keyEl.getBoundingClientRect();
+        const left = keyRect.left - containerRect.left;
+        const top = keyRect.top - containerRect.top;
+        const variant = keyEl.dataset.variant;
+
+        const photoLayer = keyEl.querySelector('.key-photo-layer');
+        const tintLayer = keyEl.querySelector('.key-tint-layer');
+        const borderLayer = keyEl.querySelector('.key-border-layer');
+        const labelEl = keyEl.querySelector('.key-label');
+
+        photoLayer.style.backgroundImage = `url("${state.bgImage}")`;
+        photoLayer.style.backgroundSize = `${renderW}px ${renderH}px`;
+        photoLayer.style.backgroundPosition = `${offsetX - left}px ${offsetY - top}px`;
+
+        tintLayer.style.backgroundColor = getTintStyle(variant);
+
+        keyEl.style.boxShadow = state.isDark
+          ? '0 8px 18px -4px rgba(0,0,0,0.6), 0 2px 6px -1px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -2px 4px rgba(0,0,0,0.45)'
+          : '0 8px 16px -4px rgba(15,23,42,0.18), 0 2px 5px -1px rgba(15,23,42,0.1), inset 0 1px 2px rgba(255,255,255,0.9), inset 0 -2px 4px rgba(15,23,42,0.12)';
+
+        borderLayer.style.borderColor = state.isDark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.75)';
+        borderLayer.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.06) 45%, rgba(0,0,0,0.12) 100%)';
+
+        const forceWhite = variant === 'accent' || variant === 'danger' || variant === 'operator' || state.isDark;
+        labelEl.style.color = forceWhite ? '#ffffff' : '#0f172a';
+        labelEl.style.textShadow = forceWhite
+          ? '0 2px 6px rgba(0,0,0,0.85), 0 0 12px rgba(0,0,0,0.55)'
+          : '0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)';
+      });
+
+      document.getElementById('ambientBg').style.backgroundImage = `url("${state.bgImage}")`;
+      document.getElementById('keypadAmbient').style.backgroundImage = `url("${state.bgImage}")`;
+    }
+
+    // ====================================================
+    // 6. ACCIONES DE CÁLCULO Y ACTUALIZACIÓN DE INTERFAZ
+    // ====================================================
+    function updateDisplayUI() {
+      const exprEl = document.getElementById('exprDisplay');
+      const resEl = document.getElementById('resultDisplay');
+      const eqSign = document.getElementById('equalSignPreview');
+
+      exprEl.innerHTML = state.expression ? state.expression : '<span class="opacity-40">0</span>';
+
+      const live = state.expression ? evaluateMathExpression(state.expression, state.angleMode) : '';
+      const validLive = live !== 'Error' && live !== 'Error Matemático' && live !== '';
+
+      if (state.expression && validLive && String(live) !== state.expression) {
+        eqSign.classList.remove('hidden');
+      } else {
+        eqSign.classList.add('hidden');
+      }
+
+      const displayValue = state.expression
+        ? validLive
+          ? formatNumberDisplay(live, state.forceSci)
+          : formatNumberDisplay(state.expression, state.forceSci)
+        : formatNumberDisplay(state.lastAnswer, state.forceSci);
+
+      resEl.textContent = displayValue;
+      resEl.className = `font-mono-code font-extrabold tracking-tight text-right transition-all ${
+        String(displayValue).length > 12 ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'
+      } ${String(state.lastAnswer).includes('Error') ? 'text-rose-400' : state.isDark ? 'text-white' : 'text-slate-900'}`;
+
+      document.getElementById('badgeAngle').textContent = state.angleMode;
+      document.getElementById('badgeInv').classList.toggle('hidden', !state.isInverse);
+      document.getElementById('badgeSci').classList.toggle('hidden', !state.forceSci);
+    }
+
+    function handleKeyAction(btn) {
+      triggerFeedback(btn.variant === 'accent' ? 680 : btn.isSci ? 460 : 540);
+      const val = btn.action || btn.label;
+
+      switch (val) {
+        case 'AC':
+          state.expression = '';
+          break;
+        case 'DEL':
+          state.expression = state.expression.slice(0, -1);
+          break;
+        case 'INV':
+          state.isInverse = !state.isInverse;
+          renderKeypad();
+          break;
+        case 'DEG_RAD':
+          state.angleMode = state.angleMode === 'DEG' ? 'RAD' : 'DEG';
+          renderKeypad();
+          break;
+        case 'FE':
+          state.forceSci = !state.forceSci;
+          renderKeypad();
+          break;
+        case 'SIGN':
+          if (!state.expression) state.expression = '-';
+          else if (state.expression.startsWith('-')) state.expression = state.expression.slice(1);
+          else state.expression = `-(${state.expression})`;
+          break;
+        case 'POW2':
+          state.expression = state.expression ? `${state.expression}^2` : `${state.lastAnswer}^2`;
+          break;
+        case 'POWY':
+          state.expression = state.expression ? `${state.expression}^` : `${state.lastAnswer}^`;
+          break;
+        case 'SQRT':
+          state.expression += '√(';
+          break;
+        case 'NROOT':
+          state.expression = state.expression ? `${state.expression}ⁿ√(` : '3ⁿ√(';
+          break;
+        case 'FACT':
+          state.expression = state.expression ? `${state.expression}!` : `${state.lastAnswer}!`;
+          break;
+        case 'EXP10':
+          state.expression = state.expression ? `${state.expression}×10^` : '10^';
+          break;
+        case 'SIN':
+          state.expression += state.isInverse ? 'asin(' : 'sin(';
+          break;
+        case 'COS':
+          state.expression += state.isInverse ? 'acos(' : 'cos(';
+          break;
+        case 'TAN':
+          state.expression += state.isInverse ? 'atan(' : 'tan(';
+          break;
+        case 'LOG':
+          state.expression += 'log(';
+          break;
+        case 'LN':
+          state.expression += 'ln(';
+          break;
+        case '=': {
+          if (!state.expression) return;
+          const finalRes = evaluateMathExpression(state.expression, state.angleMode);
+          if (finalRes !== 'Error' && finalRes !== 'Error Matemático' && finalRes !== '') {
+            state.history.unshift({
+              id: Date.now(),
+              expr: state.expression,
+              result: finalRes
+            });
+            state.history = state.history.slice(0, 30);
+            try {
+              localStorage.setItem('calc_pro_history', JSON.stringify(state.history));
+            } catch (e) {}
+            state.lastAnswer = String(finalRes);
+            state.expression = String(finalRes);
+            renderHistoryList();
+          } else {
+            state.lastAnswer = 'Error Matemático';
+          }
+          break;
+        }
+        default: {
+          const isBin = ['+', '−', '×', '÷', '%'].includes(val);
+          if (!state.expression && isBin && state.lastAnswer !== '0' && !state.lastAnswer.includes('Error')) {
+            state.expression = `${state.lastAnswer}${val}`;
+          } else {
+            state.expression += val;
+          }
+        }
+      }
+      updateDisplayUI();
+    }
+
+    function renderHistoryList() {
+      const list = document.getElementById('historyList');
+      const dot = document.getElementById('historyDot');
+      dot.classList.toggle('hidden', state.history.length === 0);
+
+      if (state.history.length === 0) {
+        list.innerHTML = '<p class="opacity-60 py-3 text-center">Aún no hay cálculos guardados.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      state.history.forEach((item) => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full text-right p-2 rounded-xl transition flex items-center justify-between hover:bg-white/10';
+        row.innerHTML = `
+          <span class="opacity-70 truncate max-w-[55%]">${item.expr} =</span>
+          <span class="text-sm font-bold font-mono-code text-emerald-400">${formatNumberDisplay(item.result, state.forceSci)}</span>
+        `;
+        row.addEventListener('click', () => {
+          state.expression = String(item.result);
+          document.getElementById('historyPanel').classList.add('hidden');
+          updateDisplayUI();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    // ====================================================
+    // 7. EVENTOS DE CONTROLES Y TECLADO FÍSICO
+    // ====================================================
+    function updateImageDimensions(srcUrl) {
+      const img = new Image();
+      img.onload = () => {
+        state.imgSize = { width: img.naturalWidth || 800, height: img.naturalHeight || 1150 };
+        syncOpticalWindows();
+      };
+      img.src = srcUrl;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderKeypad();
+      renderHistoryList();
+      updateDisplayUI();
+      updateImageDimensions(state.bgImage);
+
+      window.addEventListener('resize', syncOpticalWindows);
+
+      // Sliders de transparencia sincronizados
+      const sTop = document.getElementById('opacitySliderTop');
+      const sBot = document.getElementById('opacitySliderBottom');
+      const opLabel = document.getElementById('opacityLabel');
+
+      function onOpacityChange(val) {
+        state.glassOpacity = parseFloat(val);
+        sTop.value = val;
+        sBot.value = val;
+        opLabel.textContent = `${Math.round((1 - state.glassOpacity) * 100)}% visible`;
+        syncOpticalWindows();
+      }
+      sTop.addEventListener('input', (e) => onOpacityChange(e.target.value));
+      sBot.addEventListener('input', (e) => onOpacityChange(e.target.value));
+
+      // Subir fotografía personalizada
+      const photoInput = document.getElementById('photoInput');
+      document.getElementById('btnUploadPhoto').addEventListener('click', () => photoInput.click());
+      document.getElementById('btnChangePhotoPanel').addEventListener('click', () => photoInput.click());
+
+      photoInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target.result === 'string') {
+            state.bgImage = ev.target.result;
+            try {
+              localStorage.setItem('calc_pro_custom_photo_v2', state.bgImage);
+            } catch (err) {}
+            updateImageDimensions(state.bgImage);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('btnResetPhoto').addEventListener('click', () => {
+        state.bgImage = createDefaultAvatarImage();
+        try {
+          localStorage.removeItem('calc_pro_custom_photo_v2');
+        } catch (err) {}
+        updateImageDimensions(state.bgImage);
+      });
+
+      // Alternar paneles
+      document.getElementById('btnToggleCustom').addEventListener('click', () => {
+        document.getElementById('customizerPanel').classList.toggle('hidden');
+        document.getElementById('historyPanel').classList.add('hidden');
+        setTimeout(syncOpticalWindows, 50);
+      });
+
+      document.getElementById('btnToggleHistory').addEventListener('click', () => {
+        document.getElementById('historyPanel').classList.toggle('hidden');
+        document.getElementById('customizerPanel').classList.add('hidden');
+        setTimeout(syncOpticalWindows, 50);
+      });
+
+      document.getElementById('btnClearHistory').addEventListener('click', () => {
+        state.history = [];
+        try {
+          localStorage.removeItem('calc_pro_history');
+        } catch (e) {}
+        renderHistoryList();
+      });
+
+      document.getElementById('btnToggleSci').addEventListener('click', () => {
+        state.showSciKeys = !state.showSciKeys;
+        renderKeypad();
+      });
+
+      document.getElementById('btnToggleSound').addEventListener('click', (e) => {
+        state.soundAndHaptics = !state.soundAndHaptics;
+        e.target.textContent = state.soundAndHaptics ? 'Háptica: ON' : 'Silencio';
+      });
+
+      // Modo Claro / Oscuro
+      document.getElementById('btnToggleTheme').addEventListener('click', () => {
+        state.isDark = !state.isDark;
+        const body = document.getElementById('appBody');
+        const shell = document.getElementById('calcShell');
+        const screen = document.getElementById('displayScreen');
+
+        document.getElementById('iconSun').classList.toggle('hidden', !state.isDark);
+        document.getElementById('iconMoon').classList.toggle('hidden', state.isDark);
+
+        if (state.isDark) {
+          body.className = 'min-h-screen w-full flex flex-col items-center justify-center p-2 sm:p-5 transition-colors duration-500 overflow-x-hidden bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950 text-slate-100';
+          shell.className = 'relative z-10 w-full max-w-[430px] rounded-[2.2rem] p-3.5 sm:p-5 transition-all duration-300 border bg-slate-900/65 border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.85),inset_0_1px_2px_rgba(255,255,255,0.2)] backdrop-blur-2xl';
+          screen.className = 'relative rounded-3xl p-4 mb-3.5 border transition-all overflow-hidden bg-slate-950/75 border-white/15 shadow-[inset_0_4px_20px_rgba(0,0,0,0.75)]';
+        } else {
+          body.className = 'min-h-screen w-full flex flex-col items-center justify-center p-2 sm:p-5 transition-colors duration-500 overflow-x-hidden bg-gradient-to-br from-slate-200 via-stone-100 to-slate-300 text-slate-800';
+          shell.className = 'relative z-10 w-full max-w-[430px] rounded-[2.2rem] p-3.5 sm:p-5 transition-all duration-300 border bg-white/65 border-white/80 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.28),inset_0_2px_4px_rgba(255,255,255,0.9)] backdrop-blur-2xl';
+          screen.className = 'relative rounded-3xl p-4 mb-3.5 border transition-all overflow-hidden bg-slate-100/85 border-white/90 shadow-[inset_0_3px_12px_rgba(15,23,42,0.12)]';
+        }
+        updateDisplayUI();
+        syncOpticalWindows();
+      });
+
+      // Copiar resultado
+      document.getElementById('btnCopy').addEventListener('click', () => {
+        const resText = document.getElementById('resultDisplay').textContent || '0';
+        const ta = document.createElement('textarea');
+        ta.value = resText.replace(/,/g, '');
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          const copyText = document.getElementById('copyText');
+          copyText.textContent = '¡Copiado!';
+          setTimeout(() => (copyText.textContent = 'Copiar'), 1600);
+        } catch (e) {}
+        document.body.removeChild(ta);
+      });
+
+      // Soporte completo de teclado físico
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const k = e.key;
+        if (/^[0-9.]$/.test(k)) {
+          e.preventDefault();
+          handleKeyAction({ label: k });
+        } else if (k === '+') {
+          e.preventDefault();
+          handleKeyAction({ label: '+' });
+        } else if (k === '-') {
+          e.preventDefault();
+          handleKeyAction({ label: '−' });
+        } else if (k === '*') {
+          e.preventDefault();
+          handleKeyAction({ label: '×' });
+        } else if (k === '/') {
+          e.preventDefault();
+          handleKeyAction({ label: '÷' });
+        } else if (k === '%') {
+          e.preventDefault();
+          handleKeyAction({ label: '%' });
+        } else if (k === '^') {
+          e.preventDefault();
+          handleKeyAction({ action: 'POWY', label: '^' });
+        } else if (k === '(' || k === ')') {
+          e.preventDefault();
+          handleKeyAction({ label: k });
+        } else if (k === 'Enter' || k === '=') {
+          e.preventDefault();
+          handleKeyAction({ label: '=', variant: 'accent' });
+        } else if (k === 'Backspace') {
+          e.preventDefault();
+          handleKeyAction({ action: 'DEL' });
+        } else if (k === 'Escape') {
+          e.preventDefault();
+          handleKeyAction({ action: 'AC' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
